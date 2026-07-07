@@ -1,7 +1,7 @@
 {
   "AppName": "Boost FPS Ultimate",
   "Version": "1.0.0",
-  "RepoBaseUrl": "https://raw.githubusercontent.com/YOURUSERNAME/BoostFPSUltimate/main",
+  "RepoBaseUrl": "https://raw.githubusercontent.com/banyongmaster-sketch/BoostFPSUltimate/main/BoostFPSUltimate/BoostFPSUltimate/config.json",
   "InstallFolder": "$env:LocalAppData\\BoostFPSUltimate",
   "Files": [
     "BoostFPS.ps1",

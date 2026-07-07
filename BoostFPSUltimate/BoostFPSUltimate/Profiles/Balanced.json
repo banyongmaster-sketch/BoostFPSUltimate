@@ -1,0 +1,10 @@
+{
+  "ProfileName": "Balanced",
+  "Description": "Solid performance gains, low risk, safe for daily use",
+  "RiskLevel": "Safe",
+  "PowerPlan": "HighPerformance",
+  "DisableFullscreenOptimizations": true,
+  "DisableNagle": false,
+  "DisableGameDVR": true,
+  "TcpAutoTuning": "normal"
+}

@@ -1,0 +1,10 @@
+{
+  "ProfileName": "Battery",
+  "Description": "Laptop-friendly, keeps power saving features intact",
+  "RiskLevel": "Safe",
+  "PowerPlan": "Balanced",
+  "DisableFullscreenOptimizations": false,
+  "DisableNagle": false,
+  "DisableGameDVR": false,
+  "TcpAutoTuning": "normal"
+}

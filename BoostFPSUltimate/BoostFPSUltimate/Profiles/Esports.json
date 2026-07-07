@@ -1,0 +1,10 @@
+{
+  "ProfileName": "Esports",
+  "Description": "Lowest latency, competitive titles (Valorant, CS2, Apex, Overwatch)",
+  "RiskLevel": "Advanced",
+  "PowerPlan": "UltimatePerformance",
+  "DisableFullscreenOptimizations": true,
+  "DisableNagle": true,
+  "DisableGameDVR": true,
+  "TcpAutoTuning": "normal"
+}

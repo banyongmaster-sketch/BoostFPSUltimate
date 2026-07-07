@@ -1,0 +1,23 @@
+{
+  "AppName": "Boost FPS Ultimate",
+  "Version": "1.0.0",
+  "RepoBaseUrl": "https://raw.githubusercontent.com/YOURUSERNAME/BoostFPSUltimate/main",
+  "InstallFolder": "$env:LocalAppData\\BoostFPSUltimate",
+  "Files": [
+    "BoostFPS.ps1",
+    "config.json",
+    "Modules/Logging.psm1",
+    "Modules/HardwareInfo.psm1",
+    "Modules/NetworkInfo.psm1",
+    "Modules/RestoreBackup.psm1",
+    "Modules/CPUOptimize.psm1",
+    "Modules/GPUOptimize.psm1",
+    "Modules/MemoryStorageOptimize.psm1",
+    "Modules/NetworkOptimize.psm1",
+    "Modules/WindowsOptimize.psm1",
+    "Modules/Benchmark.psm1",
+    "Profiles/Esports.json",
+    "Profiles/Balanced.json",
+    "Profiles/Battery.json"
+  ]
+}

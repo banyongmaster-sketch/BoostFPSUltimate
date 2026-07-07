@@ -3,7 +3,7 @@
     Boost FPS Ultimate - One-line installer
 .DESCRIPTION
     Usage (after you host this repo, see README.md):
-        irm https://raw.githubusercontent.com/YOURUSERNAME/BoostFPSUltimate/main/install.ps1 | iex
+        irm https://raw.githubusercontent.com/banyongmaster-sketch/BoostFPSUltimate/main/install.ps1 | iex
 
     What it does:
     1. Checks for Administrator rights (re-launches elevated if needed)
@@ -17,7 +17,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$RepoBase = "https://raw.githubusercontent.com/YOURUSERNAME/BoostFPSUltimate/main"
+$RepoBase = "https://raw.githubusercontent.com/banyongmaster-sketch/BoostFPSUltimate/main/BoostFPSUltimate/BoostFPSUltimate"
 $InstallDir = "$env:LocalAppData\BoostFPSUltimate"
 
 function Test-BFUAdmin {

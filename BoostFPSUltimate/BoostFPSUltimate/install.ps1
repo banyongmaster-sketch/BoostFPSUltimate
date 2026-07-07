@@ -52,8 +52,8 @@ if (-not (Test-BFUAdmin)) {
     Write-Host ""
     Write-Host "Requesting Administrator permission..." -ForegroundColor Yellow
 
-    $cmd = "irm '$RepoBase/install.ps1' -Headers @{ 'User-Agent'='BoostFPSUltimateInstaller/1.0' } | iex"
-
+    $cmd = "irm '$RepoBase/install.ps1' | iex"
+    
     Start-Process powershell `
         -Verb RunAs `
         -ArgumentList "-NoExit","-Command",$cmd

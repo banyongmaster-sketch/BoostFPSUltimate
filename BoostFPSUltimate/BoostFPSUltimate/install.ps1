@@ -1,101 +1,382 @@
 <#
 .SYNOPSIS
-    Boost FPS Ultimate - One-line installer
-.DESCRIPTION
-    Usage (after you host this repo, see README.md):
-        irm https://raw.githubusercontent.com/banyongmaster-sketch/BoostFPSUltimate/main/install.ps1 | iex
+    Boost FPS Ultimate - One Line Installer
 
-    What it does:
-    1. Checks for Administrator rights (re-launches elevated if needed)
-    2. Reads config.json's file manifest from the repo
-    3. Downloads each file, verifying it downloaded fully (size check)
-    4. Retries failed downloads up to 3 times
-    5. Installs to %LocalAppData%\BoostFPSUltimate
-    6. Creates Desktop + Start Menu shortcuts
-    7. Prints an install summary
+.DESCRIPTION
+    Automated installer for Boost FPS Ultimate
+
+    Features:
+    - Administrator elevation
+    - GitHub Raw downloader
+    - Config manifest system
+    - Retry failed downloads
+    - User-Agent support
+    - Desktop shortcut
+    - Start Menu shortcut
+    - Install summary
 #>
 
 $ErrorActionPreference = "Stop"
 
+# =====================================
+# CONFIG
+# =====================================
+
 $RepoBase = "https://raw.githubusercontent.com/banyongmaster-sketch/BoostFPSUltimate/main/BoostFPSUltimate/BoostFPSUltimate"
-$InstallDir = "$env:LocalAppData\BoostFPSUltimate"
+
+$InstallDir = "$env:LOCALAPPDATA\BoostFPSUltimate"
+
+$Headers = @{
+    "User-Agent" = "BoostFPSUltimateInstaller/1.0"
+}
+
+
+# =====================================
+# ADMIN CHECK
+# =====================================
 
 function Test-BFUAdmin {
-    ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
+
+    $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
+
+    $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
+
+    return $principal.IsInRole(
+        [Security.Principal.WindowsBuiltinRole]::Administrator
+    )
 }
+
 
 if (-not (Test-BFUAdmin)) {
-    Write-Host "Re-launching as Administrator..." -ForegroundColor Yellow
-    $psCmd = "irm $RepoBase/install.ps1 | iex"
-    Start-Process powershell -Verb RunAs -ArgumentList "-NoExit","-Command",$psCmd
-    return
+
+    Write-Host ""
+    Write-Host "Requesting Administrator permission..." -ForegroundColor Yellow
+
+    $cmd = "irm '$RepoBase/install.ps1' -Headers @{ 'User-Agent'='BoostFPSUltimateInstaller/1.0' } | iex"
+
+    Start-Process powershell `
+        -Verb RunAs `
+        -ArgumentList "-NoExit","-Command",$cmd
+
+    exit
 }
 
-Write-Host "=== Boost FPS Ultimate Installer ===" -ForegroundColor Cyan
-New-Item -Path $InstallDir -ItemType Directory -Force | Out-Null
 
-# 1. Pull the manifest
+
+# =====================================
+# HEADER
+# =====================================
+
+Clear-Host
+
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host "      Boost FPS Ultimate Installer"
+Write-Host "=====================================" -ForegroundColor Cyan
+
+Write-Host ""
+
+
+
+# =====================================
+# CREATE INSTALL DIR
+# =====================================
+
+if (!(Test-Path $InstallDir)) {
+
+    New-Item `
+        -Path $InstallDir `
+        -ItemType Directory `
+        -Force | Out-Null
+}
+
+
+
+# =====================================
+# DOWNLOAD CONFIG
+# =====================================
+
 $configUrl = "$RepoBase/config.json"
-Write-Host "Fetching manifest: $configUrl"
-$config = (Invoke-WebRequest -Uri $configUrl -UseBasicParsing).Content | ConvertFrom-Json
+
+
+Write-Host "[1/3] Downloading manifest..."
+Write-Host $configUrl
+
+
+try {
+
+    $configRaw = Invoke-WebRequest `
+        -Uri $configUrl `
+        -Headers $Headers `
+        -UseBasicParsing
+
+
+    $config = $configRaw.Content | ConvertFrom-Json
+
+
+}
+catch {
+
+    Write-Host ""
+    Write-Host "FAILED: Cannot download config.json" -ForegroundColor Red
+
+    Write-Host $_.Exception.Message
+
+    exit 1
+}
+
+
+
+# Override RepoBase from config
+
+if ($config.RepoBaseUrl) {
+
+    $RepoBase = $config.RepoBaseUrl.TrimEnd("/")
+
+}
+
+
+
+Write-Host ""
+
+Write-Host "Application : $($config.AppName)"
+Write-Host "Version     : $($config.Version)"
+Write-Host ""
+
+
+
+# =====================================
+# DOWNLOAD FILES
+# =====================================
+
+Write-Host "[2/3] Installing files..."
 
 $total = $config.Files.Count
-$done = 0
+
+$current = 0
+
 $failed = @()
 
-foreach ($relPath in $config.Files) {
-    $done++
-    $url = "$RepoBase/$relPath"
-    $dest = Join-Path $InstallDir $relPath.Replace("/", "\")
-    $destFolder = Split-Path $dest -Parent
-    if (-not (Test-Path $destFolder)) { New-Item -Path $destFolder -ItemType Directory -Force | Out-Null }
 
-    Write-Progress -Activity "Installing Boost FPS Ultimate" -Status "$relPath ($done/$total)" -PercentComplete (($done / $total) * 100)
 
-    $attempt = 0
-    $ok = $false
-    while ($attempt -lt 3 -and -not $ok) {
-        $attempt++
-        try {
-            Invoke-WebRequest -Uri $url -OutFile $dest -UseBasicParsing
-            if ((Get-Item $dest).Length -gt 0) { $ok = $true }
-            else { throw "Downloaded file is 0 bytes" }
-        } catch {
-            Write-Host "  Retry $attempt/3 for $relPath ($($_.Exception.Message))" -ForegroundColor DarkYellow
-            Start-Sleep -Seconds 1
-        }
+foreach ($file in $config.Files) {
+
+
+    $current++
+
+
+    $url = "$RepoBase/$file"
+
+
+    $destination = Join-Path `
+        $InstallDir `
+        ($file -replace "/","\"
+        )
+
+
+    $folder = Split-Path $destination
+
+
+
+    if (!(Test-Path $folder)) {
+
+        New-Item `
+            -Path $folder `
+            -ItemType Directory `
+            -Force | Out-Null
+
     }
-    if (-not $ok) { $failed += $relPath }
+
+
+
+    Write-Progress `
+        -Activity "Downloading Boost FPS Ultimate" `
+        -Status "$file ($current/$total)" `
+        -PercentComplete (($current/$total)*100)
+
+
+
+    $success = $false
+
+
+
+    for ($try = 1; $try -le 3; $try++) {
+
+
+        try {
+
+
+            Invoke-WebRequest `
+                -Uri $url `
+                -Headers $Headers `
+                -OutFile $destination `
+                -UseBasicParsing
+
+
+
+            if ((Get-Item $destination).Length -gt 0) {
+
+                $success = $true
+
+                break
+
+            }
+
+
+        }
+        catch {
+
+
+            Write-Host ""
+            Write-Host `
+            "Retry $try/3 : $file" `
+            -ForegroundColor Yellow
+
+
+            Start-Sleep -Seconds 3
+
+
+        }
+
+    }
+
+
+
+    if (!$success) {
+
+        $failed += $file
+
+    }
+
 }
 
-Write-Progress -Activity "Installing Boost FPS Ultimate" -Completed
 
-# Desktop + Start Menu shortcuts
+
+Write-Progress `
+    -Activity "Downloading Boost FPS Ultimate" `
+    -Completed
+
+
+
+
+# =====================================
+# CREATE SHORTCUT
+# =====================================
+
+Write-Host ""
+
+Write-Host "[3/3] Creating shortcuts..."
+
+
+
 $wsh = New-Object -ComObject WScript.Shell
-$targetScript = Join-Path $InstallDir "BoostFPS.ps1"
-$shortcutArgs = "-NoExit -ExecutionPolicy Bypass -File `"$targetScript`""
 
-foreach ($shortcutDir in @(
-    [Environment]::GetFolderPath("Desktop"),
+
+$target = Join-Path `
+    $InstallDir `
+    "BoostFPS.ps1"
+
+
+
+$args = "-ExecutionPolicy Bypass -NoExit -File `"$target`""
+
+
+
+$locations = @(
+
+    [Environment]::GetFolderPath("Desktop")
+
     [Environment]::GetFolderPath("StartMenu") + "\Programs"
-)) {
-    $lnk = $wsh.CreateShortcut((Join-Path $shortcutDir "Boost FPS Ultimate.lnk"))
-    $lnk.TargetPath = "powershell.exe"
-    $lnk.Arguments = $shortcutArgs
-    $lnk.WorkingDirectory = $InstallDir
-    $lnk.IconLocation = "powershell.exe"
-    $lnk.Save()
+
+)
+
+
+
+foreach ($location in $locations) {
+
+
+    $shortcut = $wsh.CreateShortcut(
+
+        (Join-Path `
+        $location `
+        "Boost FPS Ultimate.lnk")
+
+    )
+
+
+    $shortcut.TargetPath = "powershell.exe"
+
+    $shortcut.Arguments = $args
+
+    $shortcut.WorkingDirectory = $InstallDir
+
+    $shortcut.IconLocation = "powershell.exe"
+
+    $shortcut.Save()
+
 }
 
-Write-Host "`n=== Install Summary ===" -ForegroundColor Cyan
-Write-Host "Installed to: $InstallDir"
-Write-Host "Files installed: $($total - $failed.Count)/$total"
-if ($failed.Count -gt 0) {
-    Write-Host "Failed files:" -ForegroundColor Red
-    $failed | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
-    Write-Host "Re-run the installer to retry failed files." -ForegroundColor Yellow
-} else {
-    Write-Host "All files installed successfully." -ForegroundColor Green
+
+
+# =====================================
+# SUMMARY
+# =====================================
+
+
+Write-Host ""
+
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host "          INSTALL SUMMARY"
+Write-Host "=====================================" -ForegroundColor Cyan
+
+
+Write-Host ""
+
+Write-Host "Install Path:"
+Write-Host $InstallDir
+
+
+Write-Host ""
+
+Write-Host "Installed:"
+Write-Host "$($total - $failed.Count) / $total files"
+
+
+
+if ($failed.Count -eq 0) {
+
+
+    Write-Host ""
+
+    Write-Host "Installation completed successfully!" `
+        -ForegroundColor Green
+
+
 }
-Write-Host "`nLaunch it from the Desktop shortcut, or run:"
-Write-Host "  powershell -ExecutionPolicy Bypass -File `"$targetScript`"" -ForegroundColor Cyan
+else {
+
+
+    Write-Host ""
+
+    Write-Host "Failed Files:" `
+        -ForegroundColor Red
+
+
+    foreach ($f in $failed) {
+
+        Write-Host " - $f"
+
+    }
+
+
+}
+
+
+
+Write-Host ""
+
+Write-Host "Launch:"
+Write-Host "powershell -ExecutionPolicy Bypass -File `"$target`""
+
+Write-Host ""
+
+Pause

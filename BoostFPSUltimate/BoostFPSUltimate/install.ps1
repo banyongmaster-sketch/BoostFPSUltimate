@@ -27,7 +27,8 @@ $RepoBase = "https://raw.githubusercontent.com/banyongmaster-sketch/BoostFPSUlti
 $InstallDir = "$env:LOCALAPPDATA\BoostFPSUltimate"
 
 $Headers = @{
-    "User-Agent" = "BoostFPSUltimateInstaller/1.0"
+    "User-Agent" = "Mozilla/5.0 BoostFPSUltimateInstaller/1.0"
+    "Accept" = "application/vnd.github.raw"
 }
 
 

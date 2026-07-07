@@ -22,8 +22,7 @@ $ErrorActionPreference = "Stop"
 # CONFIG
 # =====================================
 
-$RepoBase = "https://raw.githubusercontent.com/banyongmaster-sketch/BoostFPSUltimate/main/BoostFPSUltimate/BoostFPSUltimate"
-
+$RepoBase = "https://raw.githubusercontent.com/banyongmaster-sketch/BoostFPSUltimate/main/BoostFPSUltimate"
 $InstallDir = "$env:LOCALAPPDATA\BoostFPSUltimate"
 
 $Headers = @{
